@@ -30,20 +30,20 @@ tools/uniad_create_data.sh 준비 스크립트 활용 (데이터셋 준비 옵�
 ---
 ### 1. 사전학습 모델 평가
 
-<img width="776" height="76" alt="image" src="https://github.com/user-attachments/assets/f14a819e-06ba-4950-879c-90fa57339ec0" />
+<img width="776" height="76" alt="image" src="https://github.com/user-attachments/assets/f14a819e-06ba-4950-879c-90fa57339ec0" /> </br>
 
-주요 클래스별 성능
-Car : 0.654
-Bus / Truck : 0.711 / 0.750
+주요 클래스별 성능</br>
+Car : 0.654</br>
+Bus / Truck : 0.711 / 0.750</br>
 Pedestrian : 0.477
 </br>
 
 ### 2. stage2 모델 추가학습
 
-목표 Stage-2 모델 전체를 Mini-dataset으로 짧게 추가 학습시켰을 때의 성능 변화 관찰, 추가 학습이니 성능이 개선될 거라고 예상
+목표 : Stage-2 모델 전체를 Mini-dataset으로 짧게 추가 학습시켰을 때의 성능 변화 관찰, 추가 학습이니 성능이 개선될 거라고 예상
 
-<img width="608" height="276" alt="image" src="https://github.com/user-attachments/assets/fce06a82-87be-4bd0-b1da-ef0e67a72721" />
-</br>
+<img width="608" height="276" alt="image" src="https://github.com/user-attachments/assets/fce06a82-87be-4bd0-b1da-ef0e67a72721" /></br>
+
 결론 : 소규모 데이터로 전체 모델을 얕게 파인튜닝하는 방식은 오히려 성능 저하를 유발할 수 있다.</br>
 따라서 더 정교한 파인튜닝 전략이 필요성을 확인했다.
 </br>
@@ -53,14 +53,12 @@ Pedestrian : 0.477
 학습 방식</br>
 동결 : MotionHead 를 제외한 인식 모듈의 가중치를 고정</br>
 학습 : 오직 MotionHead만 minidataset으로 8epoch 집중 학습 
-
 목표 : 강력한 인식 성능(Stage1)은 보존하면서 목표로 하는 예측성능만 개선하기 위함
 
 성능
 
-<img width="847" height="70" alt="image" src="https://github.com/user-attachments/assets/2fee9144-ad51-4b74-bc9a-92da89099e60" />
+<img width="847" height="70" alt="image" src="https://github.com/user-attachments/assets/2fee9144-ad51-4b74-bc9a-92da89099e60" /> </br>
 
-</br>
 결론 : MotionHead만 선택적으로 학습하는 전략이 효과가 있었음을 확인했다. </br>
 대규모로 얕은 추가 파인튜닝보다 목표 모듈을 선택적으로 학습하는 것이 더 안정적으로 성능이 향상됨을 알 수 있었다.
 
