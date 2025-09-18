@@ -52,15 +52,16 @@ Pedestrian : 0.477
 
 학습 방식</br>
 동결 : MotionHead 를 제외한 인식 모듈의 가중치를 고정</br>
-학습 : 오직 MotionHead만 minidataset으로 8epoch 집중 학습 
+학습 : 오직 MotionHead만 minidataset으로 8epoch 집중 학습</br>
 목표 : 강력한 인식 성능(Stage1)은 보존하면서 목표로 하는 예측성능만 개선하기 위함
 
 성능
 
-<img width="847" height="70" alt="image" src="https://github.com/user-attachments/assets/2fee9144-ad51-4b74-bc9a-92da89099e60" /> </br>
+<img width="847" height="70" alt="image" src="https://github.com/user-attachments/assets/2fee9144-ad51-4b74-bc9a-92da89099e60" /> </br> </br>
+<img width="868" height="173" alt="image" src="https://github.com/user-attachments/assets/cd4f82ab-2c4d-4a54-b2d2-e875d237242f" /> </br>
 
-결론 : MotionHead만 선택적으로 학습하는 전략이 효과가 있었음을 확인했다. </br>
-대규모로 얕은 추가 파인튜닝보다 목표 모듈을 선택적으로 학습하는 것이 더 안정적으로 성능이 향상됨을 알 수 있었다.
+결론 : MotionHead만 선택적으로 학습하는 전략이 효과가 있었음을 확인하였고,
+     대규모로 얕은 추가 파인튜닝보다 목표 모듈을 선택적으로 학습하는 것이 더 안정적으로 성능이 향상됨을 알 수 있었다.
 
 ---
 
