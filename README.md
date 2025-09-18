@@ -1,216 +1,71 @@
-> [!IMPORTANT]
-> 🌟 Stay up to date at [opendrivelab.com](https://opendrivelab.com/#news)!
-
-<div align="center">   
+## Pre-trained Model Test
   
-# Planning-oriented Autonomous Driving
-</div>
+### UniAD 프레임워크는 두 단계로 학습된다.
 
+Stage 1 : Perception training으로 안정적인 가중치를 얻기 위해 인지 과정(Track, Map)을
+     먼저 훈련한다.
+ 
+Stage 2 : End to End training으로 인지 과정을 포함한 예측(Motion) 계획(Planning)까지 모든 작업 모듈을 함께 최적화한다. 
 
-<h3 align="center">
-  <a href="https://arxiv.org/abs/2212.10156">arXiv</a> |
-  <a href="https://www.youtube.com/watch?v=cyrxJJ_nnaQ">Video</a> |
-  <a href="sources/cvpr23_uniad_poster.png">Poster</a> |
-  <a href="https://opendrivelab.github.io/UniAD_plenary_talk_slides.pdf">Slides</a>
-</h3>
+---
 
+### 실험 환경
 
+Pre-trained model 의 pkl은 다운과 설정이 되지만 이 때 pkl은 full(v1.0 – trainval)를 기준으로 하고 다운로드와 환경설정이 잘 되지 않았다.
 
+> 데이터셋은 nuScenes v1.0-mini로 하고 여기에 맞는 pkl을 새로 생성
+tools/uniad_create_data.sh 준비 스크립트 활용 (데이터셋 준비 옵션2: nuScenes 데이터셋을 모델이 사용할 수 있는 .pkl로 포맷으로 변환하기 위한 사용을 안내하고 있다.)
 
+미리 만들어진 공식 Stage1 모델을 mini-dataset으로 만든 pkl을 사용해 평가 + Stage2 학습 및 평가
 
-https://github.com/OpenDriveLab/UniAD/assets/48089846/bcf685e4-2471-450e-8b77-e028a46bd0f7
+---
+### 실험 순서
 
+1. 베이스라인으로 삼을 사전학습 모델을 평가
 
+2. Stage2 모델 전체 추가 학습 (2Epochs)
 
+3. Stage 2까지의 사전학습 모델을 Minidataset으로 추가학습
 
-<br><br>
+---
+### 1. 사전학습 모델 평가
 
-## 🚀 `2025/02/27` UniAD 2.0 Preview
+<img width="776" height="76" alt="image" src="https://github.com/user-attachments/assets/f14a819e-06ba-4950-879c-90fa57339ec0" />
 
-We’re thrilled to announce ​**UniAD 2.0**, a milestone release delivering critical upgrades and future-ready capabilities!
+주요 클래스별 성능
+Car : 0.654
+Bus / Truck : 0.711 / 0.750
+Pedestrian : 0.477
+</br>
 
-🔑 ​**Key Enhancements**​ 
-- 🛠️ ​**​Framework**: Migrating to `mmdet3d 1.x` & `torch 2.x` (commonly used version today).  
-- 🔄 ​**Compatibility**: Existing workflows preserved - replicate our results via [Evaluation Example](docs/TRAIN_EVAL.md#example). 
-- 📊 ​**Dataset**: Integrating [nuPlan](https://www.nuscenes.org/nuplan) and [NAVSIM](https://github.com/autonomousvision/navsim) datasets.  
+### 2. stage2 모델 추가학습
 
-​📅 ​**TODO List**
-- [x] Framework upgrade​ (`mmdet3d 1.0.0rc6`,  `torch 2.0.1+cu118`) → [Installation Guide](docs/INSTALL.md).
-- [ ] Tools release for nuPlan and NAVSIM benchmark. [ETA 2025Q2]
+목표 Stage-2 모델 전체를 Mini-dataset으로 짧게 추가 학습시켰을 때의 성능 변화 관찰, 추가 학습이니 성능이 개선될 거라고 예상
 
+<img width="608" height="276" alt="image" src="https://github.com/user-attachments/assets/fce06a82-87be-4bd0-b1da-ef0e67a72721" />
+</br>
+결론 : 소규모 데이터로 전체 모델을 얕게 파인튜닝하는 방식은 오히려 성능 저하를 유발할 수 있다.</br>
+따라서 더 정교한 파인튜닝 전략이 필요성을 확인했다.
+</br>
 
-## Table of Contents:
-1. [Highlights](#high)
-2. [News](#news)
-3. [Getting Started](#start)
-   - [Installation](docs/INSTALL.md)
-   - [Prepare Dataset](docs/DATA_PREP.md)
-   - [Evaluation Example](docs/TRAIN_EVAL.md#example)
-   - [GPU Requirements](docs/TRAIN_EVAL.md#gpu)
-   - [Train/Eval](docs/TRAIN_EVAL.md)
-4. [Results and Models](#models)
-5. [License](#license)
-6. [Citation](#citation)
-8. [🔥 See Also: GenAD & Vista](#see)
+### 3. stage2까지의 사전학습 모델을 추가학습
 
-## Highlights <a name="high"></a>
+학습 방식</br>
+동결 : MotionHead 를 제외한 인식 모듈의 가중치를 고정</br>
+학습 : 오직 MotionHead만 minidataset으로 8epoch 집중 학습 
 
-- :oncoming_automobile: **Planning-oriented philosophy**: UniAD is a Unified Autonomous Driving algorithm framework following a planning-oriented philosophy. Instead of standalone modular design and multi-task learning, we cast a series of tasks, including perception, prediction and planning tasks hierarchically.
-- :trophy: **SOTA performance**: All tasks within UniAD achieve SOTA performance, especially prediction and planning (motion: 0.71m minADE, occ: 63.4% IoU, planning: 0.31% avg.Col)
+목표 : 강력한 인식 성능(Stage1)은 보존하면서 목표로 하는 예측성능만 개선하기 위함
 
-## News <a name="news"></a>
+성능
 
-- **`Paper Title Change`**: To avoid confusion with the "goal-point" navigation in Robotics, we change the title from "Goal-oriented" to "Planning-oriented" suggested by Reviewers. Thank you!
+<img width="847" height="70" alt="image" src="https://github.com/user-attachments/assets/2fee9144-ad51-4b74-bc9a-92da89099e60" />
 
-- **`Planning Metric`**: Discussion [Ref: https://github.com/OpenDriveLab/UniAD/issues/29]: [Clarification](https://github.com/OpenDriveLab/UniAD/issues/29#issuecomment-1583070151) and [Notice](https://github.com/OpenDriveLab/UniAD/issues/29#issuecomment-1717594344) regarding open-loop planning results comparison.
+</br>
+결론 : MotionHead만 선택적으로 학습하는 전략이 효과가 있었음을 확인했다. </br>
+대규모로 얕은 추가 파인튜닝보다 목표 모듈을 선택적으로 학습하는 것이 더 안정적으로 성능이 향상됨을 알 수 있었다.
 
-- **`2024/08/27`** New feature: Implementation for CARLA and closed-loop evaluation on CARLA Leaderboard 2.0 scenarios are available in [Bench2Drive](https://github.com/Thinklab-SJTU/Bench2Drive).
+---
 
-- **`2023/08/03`** Bugfix [[Commit](https://github.com/OpenDriveLab/UniAD/commit/2e1380143d7af7c93bd67725a11d6960fa4347c6)]: Previously, the visualized planning results were in opposition on the x axis, compared to the ground truth. Now it's fixed.
 
-- **`2023/06/12`** Bugfix [Ref: https://github.com/OpenDriveLab/UniAD/issues/21]: Previously, the performance of the stage1 model (track_map) could not be replicated when trained from scratch, due to mistakenly adding `loss_past_traj` and freezing `img_neck` and `BN`. By removing `loss_past_traj` and unfreezing `img_neck` and `BN` in training, the reported results could be reproduced (AMOTA: 0.393, [stage1_train_log](https://github.com/OpenDriveLab/UniAD/releases/download/v1.0/uniad_reproduce_stage1_gpu16_train.log)).
 
-- **`2023/04/18`** New feature: You can replace BEVFormer with other BEV Encoding methods, e.g., LSS, as long as you provide the `bev_embed` and `bev_pos` in [track_train](https://github.com/OpenDriveLab/UniAD/blob/cb4e3dc336ac9f94897ef3c7d85edba85a507726/projects/mmdet3d_plugin/uniad/detectors/uniad_track.py#L394) and [track_inference](https://github.com/OpenDriveLab/UniAD/blob/cb4e3dc336ac9f94897ef3c7d85edba85a507726/projects/mmdet3d_plugin/uniad/detectors/uniad_track.py#L661). Make sure your bevs and ours are of the same shape.
-- **`2023/04/18`** Base-model checkpoints are released.
 
-
-- **`2023/03/29`** Code & model initial release `v1.0`.
-- **`2023/03/21`** 🌟🌟 UniAD is accepted by CVPR 2023, as an **Award Candidate** (12 out of 2360 accepted papers)!
-- **`2022/12/21`** UniAD [paper](https://arxiv.org/abs/2212.10156) is available on arXiv.
-
-
-
-## Getting Started <a name="start"></a>
-- [Installation](docs/INSTALL.md)
-- [Prepare Dataset](docs/DATA_PREP.md)
-- [Evaluation Example](docs/TRAIN_EVAL.md#example)
-- [GPU Requirements](docs/TRAIN_EVAL.md#gpu)
-- [Train/Eval](docs/TRAIN_EVAL.md)
-
-## Results and Pre-trained Models <a name="models"></a>
-UniAD is trained in two stages. Pretrained checkpoints of both stages will be released and the results of each model are listed in the following tables.
-
-### Stage1: Perception training
-> We first train the perception modules (i.e., track and map) to obtain a stable weight initlization for the next stage. BEV features are aggregated with 5 frames (queue_length = 5).
-
-| Method | Encoder | Tracking<br>AMOTA | Mapping<br>IoU-lane | config | Download |
-| :---: | :---: | :---: | :---: | :---:|:---:| 
-| UniAD-B | R101 | 0.390 | 0.297 |  [base-stage1](projects/configs/stage1_track_map/base_track_map.py) | [base-stage1](https://github.com/OpenDriveLab/UniAD/releases/download/v1.0/uniad_base_track_map.pth) |
-
-
-
-### Stage2: End-to-end training
-> We optimize all task modules together, including track, map, motion, occupancy and planning. BEV features are aggregated with 3 frames (queue_length = 3).
-
-<!-- 
-Pre-trained models and results under main metrics are provided below. We refer you to the [paper](https://arxiv.org/abs/2212.10156) for more details. -->
-
-| Method | Encoder | Tracking<br>AMOTA | Mapping<br>IoU-lane | Motion<br>minADE |Occupancy<br>IoU-n. | Planning<br>avg.Col. | config | Download |
-| :---: | :---: | :---: | :---: | :---:|:---:| :---: | :---: | :---: |
-| UniAD-B | R101 | 0.363 | 0.313 | 0.705 | 63.7 | 0.29 |  [base-stage2](projects/configs/stage2_e2e/base_e2e.py) | [base-stage2](https://github.com/OpenDriveLab/UniAD/releases/download/v1.0.1/uniad_base_e2e.pth) |
-
-> Planning results on the nuScense benchmark
-
-<table style="text-align: center; vertical-align: middle;">
-  <tr>
-    <td rowspan = "2" > Method </td>
-    <td rowspan = "2" > Encoder </td>
-    <td colspan="4">L2(m)</td>
-    <td colspan="4">Col. Rate(%)</td>
-  </tr>
-  <tr>
-    <td>1s</td>
-    <td>2s</td>
-    <td>3s</td>
-    <td>Avg.</td>
-    <td>1s</td>
-    <td>2s</td>
-    <td>3s</td>
-    <td>Avg.</td>
-  </tr>
-  <tr>
-    <td>UniAD-B</td>
-    <td>R101</td>
-    <td>0.48</td>
-    <td>0.96</td>
-    <td>1.65</td>
-    <td>1.03</td>
-    <td>0.05</td>
-    <td>0.17</td>
-    <td>0.71</td>
-    <td>0.31</td>
-  </tr>
-</table>
-
-> ✨NEW in v2.0: Planning results on the NAVSIM benchmark (from [NAVSIM](https://arxiv.org/abs/2406.15349)).
-
-
-| Method | Encoder | NC | DAC | TTC | Comf. | EP | PDMS | 
-| :---: | :---: | :---: | :---: | :---:|:---:|:---:|:---:|
-| UniAD | R34 | 97.8 | 91.9 | 92.9 | 100 | 78.8 | 83.4 |
-
-### Checkpoint Usage
-* Download the checkpoints you need into `UniAD/ckpts/` directory.
-* You can evaluate these checkpoints to reproduce the results, following the `evaluation` section in [TRAIN_EVAL.md](docs/TRAIN_EVAL.md).
-* You can also initialize your own model with the provided weights. Change the `load_from` field to `path/of/ckpt` in the config and follow the `train` section in [TRAIN_EVAL.md](docs/TRAIN_EVAL.md) to start training.
-
-
-### Model Structure
-The overall pipeline of UniAD is controlled by [uniad_e2e.py](projects/mmdet3d_plugin/uniad/detectors/uniad_e2e.py) which coordinates all the task modules in `UniAD/projects/mmdet3d_plugin/uniad/dense_heads`. If you are interested in the implementation of a specific task module, please refer to its corresponding file, e.g., [motion_head](projects/mmdet3d_plugin/uniad/dense_heads/motion_head.py).
-
-
-## License <a name="license"></a>
-
-All assets and code are under the [Apache 2.0 license](./LICENSE) unless specified otherwise.
-
-## Citation <a name="citation"></a>
-
-
-If you find our project useful for your research, please consider citing our paper and codebase with the following BibTeX:
-
-
-```bibtex
-@inproceedings{hu2023_uniad,
- title={Planning-oriented Autonomous Driving}, 
- author={Yihan Hu and Jiazhi Yang and Li Chen and Keyu Li and Chonghao Sima and Xizhou Zhu and Siqi Chai and Senyao Du and Tianwei Lin and Wenhai Wang and Lewei Lu and Xiaosong Jia and Qiang Liu and Jifeng Dai and Yu Qiao and Hongyang Li},
- booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
- year={2023},
-}
-```
-
-```bibtex
-@misc{contributors2023_uniadrepo,
-  title={Planning-oriented Autonomous Driving},
-  author={UniAD contributors},
-  howpublished={\url{https://github.com/OpenDriveLab/UniAD}},
-  year={2023}
-}
-```
-## Related Resources
-
-[![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
-- [BEVFormer](https://github.com/fundamentalvision/BEVFormer) (Ours!)
-- [ST-P3](https://github.com/OpenPerceptionX/ST-P3) (Ours!)
-- [FIERY](https://github.com/wayveai/fiery)
-- [MOTR](https://github.com/megvii-research/MOTR)
-
-
-## 🔥 See Also  <a name="see"></a>
-We are thrilled to launch our recent line of works: [GenAD](https://arxiv.org/abs/2403.09630) and [Vista](https://arxiv.org/abs/2405.17398), to advance  **driving world models** with the **largest driving video dataset** collected from the web - [OpenDV](https://github.com/OpenDriveLab/DriveAGI/tree/main/opendv).
-
-
-[GenAD](https://github.com/OpenDriveLab/DriveAGI): **Generalized Predictive Model for Autonomous Driving** (CVPR'24, Highlight ⭐)
-
-<div id="top" align="center">
-<p align="center">
-<img src="sources/opendv_dataset.png" width="1000px" >
-</p>
-</div>
-
-
-[Vista](https://github.com/OpenDriveLab/Vista): **A Generalizable Driving World Model with High Fidelity and Versatile Controllability** 🌏
-<div id="top" align="center">
-<p align="center">
-<img src="sources/vista.gif" width="1000px" >
-</p>
-</div>
